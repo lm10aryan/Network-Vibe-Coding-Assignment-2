@@ -136,3 +136,87 @@ export const getActivityHeatmap = async (
     next(error);
   }
 };
+
+export const getProductivityInsights = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user!._id;
+    const { period = 30 } = req.query;
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - Number(period));
+
+    const completedTasks = await Task.find({
+      userId,
+      status: TaskStatus.COMPLETED,
+      completedAt: { $gte: startDate }
+    });
+
+    // Calculate best hours
+    const hourCounts: Record<number, number> = {};
+    completedTasks.forEach(task => {
+      if (task.completedAt) {
+        const hour = task.completedAt.getHours();
+        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+      }
+    });
+
+    const bestHour = Object.entries(hourCounts).reduce((max, [hour, count]) =>
+      count > max.count ? { hour: Number(hour), count } : max,
+      { hour: 0, count: 0 }
+    );
+
+    // Calculate best days
+    const dayCounts: Record<number, number> = {};
+    completedTasks.forEach(task => {
+      if (task.completedAt) {
+        const day = task.completedAt.getDay();
+        dayCounts[day] = (dayCounts[day] || 0) + 1;
+      }
+    });
+
+    const bestDay = Object.entries(dayCounts).reduce((max, [day, count]) =>
+      count > max.count ? { day: Number(day), count } : max,
+      { day: 0, count: 0 }
+    );
+
+    // Calculate current streak
+    const sortedDates = completedTasks
+      .map(t => t.completedAt ? new Date(t.completedAt).toISOString().split('T')[0] : '')
+      .filter(d => d)
+      .sort()
+      .reverse();
+
+    const uniqueDates = [...new Set(sortedDates)];
+    let currentStreak = 0;
+
+    for (let i = 0; i < uniqueDates.length; i++) {
+      const expectedDate = new Date();
+      expectedDate.setDate(expectedDate.getDate() - i);
+      const expected = expectedDate.toISOString().split('T')[0];
+
+      if (uniqueDates[i] === expected) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    res.json({
+      success: true,
+      data: {
+        bestHour: bestHour.hour,
+        bestDay: dayNames[bestDay.day],
+        currentStreak,
+        totalCompleted: completedTasks.length
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

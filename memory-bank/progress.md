@@ -118,10 +118,55 @@
 
 ---
 
+### ✅ Step 4: Add Productivity Insights Endpoint
+**Date Completed:** 2025-11-27
+**Files Modified:**
+- `/backend/src/controllers/analyticsController.ts`
+
+**What Was Done:**
+- Added `getProductivityInsights` function to the analytics controller
+- Implemented comprehensive productivity analytics that:
+  - Accepts authenticated requests with optional `period` query parameter (default: 30 days)
+  - Fetches all completed tasks within the specified time period
+  - Calculates best hour of day (hour with most task completions)
+  - Calculates best day of week (day with most task completions)
+  - Computes current streak (consecutive days with completed tasks)
+  - Returns total completed tasks count
+  - Follows the standard response format: `{ success: boolean, data: {...} }`
+  - Uses proper error handling with `next(error)` pattern
+
+**Code Pattern Used:**
+- Same controller pattern as previous functions
+- Uses Task.find() with status and date filtering
+- Multiple aggregation passes for different insights
+- Uses Record<number, number> for hour/day counting
+- Implements streak calculation with date comparison logic
+- Maps numeric day (0-6) to day name strings
+
+**Testing:**
+- ✅ Function added successfully to controller
+- ✅ TypeScript compilation passes (no new errors introduced)
+- ✅ Follows existing code patterns and conventions
+- ✅ Handles edge cases: empty tasks return default values
+
+**Notes:**
+- Best hour returns 24-hour format (0-23)
+- Best day returns human-readable day name (e.g., "Monday")
+- Streak calculation checks consecutive days starting from today
+- Streak breaks if any day is missing in the sequence
+- Default values when no tasks: bestHour=0, bestDay="Sunday", streak=0
+
+**Algorithm Highlights:**
+- **Best Hour:** Counts completions per hour (0-23), finds hour with max count
+- **Best Day:** Counts completions per day of week (0-6), finds day with max count
+- **Streak:** Sorts dates descending, checks if each date = today - i days
+- **Data Quality:** Filters out tasks without completedAt dates
+
+---
+
 ## Pending Steps
 
-### Phase 1: Backend Development (Steps 4-7)
-- [ ] Step 4: Add Productivity Insights Endpoint
+### Phase 1: Backend Development (Steps 5-7)
 - [ ] Step 5: Add Leaderboard Endpoint
 - [ ] Step 6: Create Analytics Routes
 - [ ] Step 7: Register Analytics Routes in API
