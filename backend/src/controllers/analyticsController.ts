@@ -46,3 +46,51 @@ export const getXPProgress = async (
     next(error);
   }
 };
+
+export const getTaskCompletionAnalytics = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user!._id;
+    const { period = 30 } = req.query;
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - Number(period));
+
+    const tasks = await Task.find({
+      userId,
+      createdAt: { $gte: startDate }
+    });
+
+    // Analytics by priority
+    const byPriority: Record<string, number> = {};
+    // Analytics by status
+    const byStatus: Record<string, number> = {};
+    // Analytics by completion
+    let totalTasks = tasks.length;
+    let completedTasks = 0;
+
+    tasks.forEach(task => {
+      byPriority[task.priority] = (byPriority[task.priority] || 0) + 1;
+      byStatus[task.status] = (byStatus[task.status] || 0) + 1;
+      if (task.status === TaskStatus.COMPLETED) {
+        completedTasks++;
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        byPriority,
+        byStatus,
+        totalTasks,
+        completedTasks,
+        completionRate: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
