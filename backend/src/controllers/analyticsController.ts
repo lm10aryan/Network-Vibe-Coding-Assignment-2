@@ -94,3 +94,45 @@ export const getTaskCompletionAnalytics = async (
     next(error);
   }
 };
+
+export const getActivityHeatmap = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user!._id;
+    const { period = 365 } = req.query;
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - Number(period));
+
+    const completedTasks = await Task.find({
+      userId,
+      status: TaskStatus.COMPLETED,
+      completedAt: { $gte: startDate }
+    });
+
+    // Group by date and count tasks
+    const activityByDate: Record<string, number> = {};
+    completedTasks.forEach(task => {
+      if (task.completedAt) {
+        const dateKey = task.completedAt.toISOString().split('T')[0];
+        activityByDate[dateKey] = (activityByDate[dateKey] || 0) + 1;
+      }
+    });
+
+    // Convert to array format
+    const data = Object.entries(activityByDate).map(([date, count]) => ({
+      date,
+      count
+    }));
+
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+};

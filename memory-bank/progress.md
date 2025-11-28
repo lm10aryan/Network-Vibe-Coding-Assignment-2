@@ -81,10 +81,46 @@
 
 ---
 
+### ✅ Step 3: Add Activity Heatmap Endpoint
+**Date Completed:** 2025-11-27
+**Files Modified:**
+- `/backend/src/controllers/analyticsController.ts`
+
+**What Was Done:**
+- Added `getActivityHeatmap` function to the analytics controller
+- Implemented GitHub-style activity heatmap data aggregation that:
+  - Accepts authenticated requests with optional `period` query parameter (default: 365 days)
+  - Fetches all completed tasks within the specified time period
+  - Groups tasks by completion date (YYYY-MM-DD format)
+  - Counts number of tasks completed per day
+  - Returns data formatted for heatmap visualization
+  - Follows the standard response format: `{ success: boolean, data: Array<{ date, count }> }`
+  - Uses proper error handling with `next(error)` pattern
+
+**Code Pattern Used:**
+- Same controller pattern as getXPProgress and getTaskCompletionAnalytics
+- Uses Task.find() with status and date filtering
+- Groups by ISO date string for consistency
+- Uses Record<string, number> for counting tasks per date
+- Maps to array format for frontend consumption
+
+**Testing:**
+- ✅ Function added successfully to controller
+- ✅ TypeScript compilation passes (no new errors introduced)
+- ✅ Follows existing code patterns and conventions
+- ✅ Handles edge case: tasks without completedAt dates are skipped
+
+**Notes:**
+- Default period is 365 days to show a full year of activity
+- Only counts completed tasks (not all tasks)
+- Data structure matches GitHub contribution graph format
+- Frontend can map count to color intensity for visualization
+
+---
+
 ## Pending Steps
 
-### Phase 1: Backend Development (Steps 3-7)
-- [ ] Step 3: Add Activity Heatmap Endpoint
+### Phase 1: Backend Development (Steps 4-7)
 - [ ] Step 4: Add Productivity Insights Endpoint
 - [ ] Step 5: Add Leaderboard Endpoint
 - [ ] Step 6: Create Analytics Routes
