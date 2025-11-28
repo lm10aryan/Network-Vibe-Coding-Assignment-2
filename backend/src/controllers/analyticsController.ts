@@ -220,3 +220,85 @@ export const getProductivityInsights = async (
     next(error);
   }
 };
+
+export const getLeaderboard = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user!._id;
+    const { period = 'weekly' } = req.query;
+
+    let startDate: Date | undefined;
+    if (period === 'weekly') {
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === 'monthly') {
+      startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 1);
+    }
+
+    // Get current user's friends
+    const currentUser = await User.findById(userId).populate('friends', 'name email avatar xp totalTasksCompleted');
+    if (!currentUser) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    // Build leaderboard including current user and friends
+    const usersToRank = [currentUser, ...(currentUser.friends as any[])];
+
+    // If period-based, calculate XP for that period
+    if (startDate) {
+      const leaderboardData = await Promise.all(
+        usersToRank.map(async (user) => {
+          const periodTasks = await Task.find({
+            userId: user._id,
+            status: TaskStatus.COMPLETED,
+            completedAt: { $gte: startDate }
+          });
+
+          const periodXP = periodTasks.reduce((sum, task) => sum + task.points, 0);
+          const periodTasksCompleted = periodTasks.length;
+
+          return {
+            userId: user._id,
+            name: user.name,
+            avatar: user.avatar,
+            xp: periodXP,
+            tasksCompleted: periodTasksCompleted
+          };
+        })
+      );
+
+      // Sort by XP descending
+      leaderboardData.sort((a, b) => b.xp - a.xp);
+
+      res.json({
+        success: true,
+        data: leaderboardData,
+        currentUserId: userId
+      });
+    } else {
+      // All-time leaderboard
+      const leaderboardData = usersToRank.map(user => ({
+        userId: user._id,
+        name: user.name,
+        avatar: user.avatar,
+        xp: user.xp,
+        tasksCompleted: user.totalTasksCompleted
+      }));
+
+      leaderboardData.sort((a, b) => b.xp - a.xp);
+
+      res.json({
+        success: true,
+        data: leaderboardData,
+        currentUserId: userId
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};

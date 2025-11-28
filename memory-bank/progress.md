@@ -164,12 +164,124 @@
 
 ---
 
-## Pending Steps
+### ✅ Step 5: Add Leaderboard Endpoint
+**Date Completed:** 2025-11-27
+**Files Modified:**
+- `/backend/src/controllers/analyticsController.ts`
 
-### Phase 1: Backend Development (Steps 5-7)
-- [ ] Step 5: Add Leaderboard Endpoint
-- [ ] Step 6: Create Analytics Routes
-- [ ] Step 7: Register Analytics Routes in API
+**What Was Done:**
+- Added `getLeaderboard` function to the analytics controller
+- Implemented friend leaderboard system that:
+  - Accepts authenticated requests with optional `period` query parameter ('weekly', 'monthly', 'all-time')
+  - Fetches current user and their friends from User model
+  - For period-based leaderboards: calculates XP and tasks from completed tasks in that period
+  - For all-time leaderboard: uses total XP and totalTasksCompleted from User model
+  - Ranks users by XP in descending order
+  - Returns leaderboard data with current user ID for highlighting
+  - Follows the standard response format: `{ success: boolean, data: [...], currentUserId }`
+  - Uses proper error handling with `next(error)` pattern
+
+**Code Pattern Used:**
+- Same controller pattern as previous functions
+- Uses User.findById() with populate for friends data
+- Uses Promise.all() for parallel task queries (period-based)
+- Conditional logic for weekly (7 days), monthly (1 month), all-time periods
+- Sorts leaderboard by XP descending
+
+**Testing:**
+- ✅ Function added successfully to controller
+- ✅ TypeScript compilation passes (no new errors introduced)
+- ✅ Follows existing code patterns and conventions
+- ✅ Handles edge case: returns 404 if user not found
+
+**Notes:**
+- Includes current user in leaderboard (not just friends)
+- Weekly = last 7 days, Monthly = last 1 month
+- All-time uses pre-calculated User.xp and User.totalTasksCompleted
+- Period-based leaderboards query Task collection for accurate period stats
+- Frontend can highlight current user using currentUserId field
+
+---
+
+### ✅ Step 6: Create Analytics Routes
+**Date Completed:** 2025-11-27
+**Files Created:**
+- `/backend/src/routes/analyticsRoutes.ts`
+
+**What Was Done:**
+- Created analytics routes file following existing route patterns
+- Defined 5 analytics endpoints:
+  - GET `/api/analytics/xp-progress` - XP progress over time
+  - GET `/api/analytics/task-completion` - Task completion analytics
+  - GET `/api/analytics/activity-heatmap` - Activity heatmap data
+  - GET `/api/analytics/productivity-insights` - Productivity insights
+  - GET `/api/analytics/leaderboard` - Friend leaderboard
+- All routes protected with `authenticate` middleware
+- Added input validation using express-validator:
+  - Period parameters validated as integers (1-365)
+  - Leaderboard period validated as enum ('weekly', 'monthly', 'all-time')
+- Imported all controller functions from analyticsController
+- Exported router for mounting in main API
+
+**Code Pattern Used:**
+- Same route pattern as taskRoutes.ts
+- Uses Router from Express
+- Applies authentication middleware to all routes
+- Uses query parameter validation
+- Clean, modular route definitions
+
+**Testing:**
+- ✅ File created successfully
+- ✅ TypeScript compilation passes (no new errors introduced)
+- ✅ Follows existing route patterns
+- ✅ All controller functions properly imported
+
+**Notes:**
+- All routes require authentication
+- Input validation prevents invalid period values
+- Routes ready for mounting in main API router
+
+---
+
+### ✅ Step 7: Register Analytics Routes in API
+**Date Completed:** 2025-11-27
+**Files Modified:**
+- `/backend/src/routes/api.ts`
+
+**What Was Done:**
+- Imported analyticsRoutes from './analyticsRoutes'
+- Added 'analytics: /api/analytics' to endpoints list in status route
+- Mounted analytics routes at '/analytics' path
+- All analytics endpoints now accessible at `/api/analytics/*`
+
+**Code Pattern Used:**
+- Same mounting pattern as existing routes (auth, tasks, users, etc.)
+- Added import at top with other route imports
+- Updated API status endpoint to include analytics
+- Mounted routes after organizer routes
+
+**Testing:**
+- ✅ File modified successfully
+- ✅ TypeScript compilation passes (no new errors introduced)
+- ✅ Follows existing API structure
+- ✅ Analytics endpoints properly registered
+
+**Notes:**
+- Analytics routes now accessible at:
+  - GET `/api/analytics/xp-progress`
+  - GET `/api/analytics/task-completion`
+  - GET `/api/analytics/activity-heatmap`
+  - GET `/api/analytics/productivity-insights`
+  - GET `/api/analytics/leaderboard`
+- All routes require authentication
+- API status route (`GET /api/`) now lists analytics endpoint
+
+**Backend Phase Complete!**
+All backend functionality for Analytics Dashboard & Leaderboard is now implemented and wired up!
+
+---
+
+## Pending Steps
 
 ### Phase 2: Frontend Development (Steps 8-14)
 - [ ] Step 8: Create Analytics API Client
