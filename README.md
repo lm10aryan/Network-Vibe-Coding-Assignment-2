@@ -11,7 +11,12 @@ LVL.AI is a full-stack productivity platform that transforms task management int
 - **🎮 Gamified Experience**: XP-based leveling system with achievements and streaks
 - **🤖 AI-Powered Insights**: Smart task suggestions and productivity analysis using DeepSeek AI
 - **👥 Social Features**: Friend connections, shared achievements, and collaborative challenges
-- **📊 Advanced Analytics**: Comprehensive progress tracking and productivity metrics
+- **📊 Advanced Analytics Dashboard**:
+  - **XP Progress Tracking**: Visualize XP growth over time with interactive line charts
+  - **Activity Heatmap**: GitHub-style contribution graph showing daily task completion patterns
+  - **Productivity Insights**: Track best hours, best days, current streaks, and completion stats
+  - **Friend Leaderboard**: Compete with friends with weekly, monthly, and all-time rankings
+  - **Task Completion Analytics**: View task distribution by priority and status
 - **🏨 Hotel Management**: Complete hotel operations dashboard with booking and billing systems
 - **🔐 Secure Authentication**: JWT-based authentication with email verification
 - **📱 Responsive Design**: Modern UI built with Tailwind CSS and Radix UI components
@@ -191,6 +196,66 @@ lvl.ai/
 | PUT | `/api/friends/request/:id` | Accept/reject friend request | Private |
 | DELETE | `/api/friends/:id` | Remove friend | Private |
 
+### Analytics Dashboard Endpoints
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|---------|
+| GET | `/api/analytics/xp-progress?period=30` | Get XP progress over time | Private |
+| GET | `/api/analytics/task-completion?period=30` | Get task completion analytics | Private |
+| GET | `/api/analytics/activity-heatmap?period=365` | Get daily activity heatmap data | Private |
+| GET | `/api/analytics/productivity-insights?period=30` | Get productivity insights | Private |
+| GET | `/api/analytics/leaderboard?period=weekly` | Get friend leaderboard rankings | Private |
+
+**Query Parameters:**
+- `period` (number): Days to look back (1-365) for most endpoints
+- `period` (string): Time period for leaderboard - 'weekly', 'monthly', or 'all-time'
+
+## 📊 Analytics Dashboard Features
+
+### Overview
+The Analytics Dashboard provides comprehensive insights into your productivity patterns and progress. Access at `/analytics` route.
+
+### Components
+
+#### 1. XP Progress Chart
+- **Visualization**: Interactive line chart using Recharts
+- **Data**: XP earned over time (default: last 30 days)
+- **Features**:
+  - Hover tooltips showing exact XP values
+  - Responsive design adapting to screen size
+  - Real-time data updates
+
+#### 2. Activity Heatmap
+- **Visualization**: GitHub-style contribution graph
+- **Data**: Daily task completion counts (default: last 365 days)
+- **Features**:
+  - Color intensity based on activity level (0-6+ tasks)
+  - Weekly grid layout for pattern recognition
+  - Tooltips showing date and task count
+
+#### 3. Productivity Insights
+- **Best Hour**: Hour of day with most task completions
+- **Best Day**: Day of week with highest productivity
+- **Current Streak**: Consecutive days with completed tasks
+- **Total Completed**: Total number of tasks completed in period
+- **Visualization**: 2x2 grid of insight cards with color-coded icons
+
+#### 4. Friend Leaderboard
+- **Rankings**: XP-based rankings including current user and friends
+- **Period Selection**: Switch between Weekly, Monthly, and All-Time views
+- **Features**:
+  - Current user highlighted with distinct styling
+  - Real-time rank updates
+  - Tasks completed and XP for each user
+  - Trophy icon header for gamification
+
+### Technical Implementation
+- **Backend**: 5 dedicated API endpoints with MongoDB aggregation
+- **Frontend**: 4 React components with TypeScript
+- **State Management**: React hooks with loading and error states
+- **Authentication**: All endpoints protected with JWT middleware
+- **Data Validation**: express-validator for query parameters
+
 ## 🤖 AI Features
 
 ### Organizer Agent
@@ -352,7 +417,8 @@ backend/src/
 │   ├── authController.ts
 │   ├── taskController.ts
 │   ├── userController.ts
-│   └── friendController.ts
+│   ├── friendController.ts
+│   └── analyticsController.ts  # Analytics Dashboard endpoints
 ├── middleware/           # Custom middleware
 │   ├── auth.ts          # Authentication middleware
 │   ├── errorHandler.ts  # Error handling
@@ -366,7 +432,8 @@ backend/src/
 │   ├── taskRoutes.ts
 │   ├── userRoutes.ts
 │   ├── friendRoutes.ts
-│   └── organizerAgentRoutes.ts
+│   ├── organizerAgentRoutes.ts
+│   └── analyticsRoutes.ts  # Analytics Dashboard routes
 ├── services/            # Business logic
 ├── utils/               # Utility functions
 │   ├── logger.ts
@@ -381,19 +448,30 @@ frontend/src/
 │   ├── page.tsx         # Landing page
 │   ├── home/            # Dashboard
 │   ├── tasks/           # Task management
+│   ├── analytics/       # Analytics Dashboard
+│   │   └── page.tsx     # Analytics page with all components
 │   ├── login/           # Authentication
 │   └── register/
 ├── components/          # React components
 │   ├── auth/            # Authentication components
-│   ├── tasks/            # Task management components
-│   ├── ui/               # Reusable UI components
-│   ├── layout/           # Layout components
-│   └── charts/           # Data visualization
+│   ├── tasks/           # Task management components
+│   ├── analytics/       # Analytics components
+│   │   ├── ProgressChart.tsx        # XP progress line chart
+│   │   ├── ActivityHeatmap.tsx      # GitHub-style heatmap
+│   │   ├── Leaderboard.tsx          # Friend leaderboard
+│   │   ├── ProductivityInsights.tsx # Insights cards
+│   │   └── index.ts                 # Barrel exports
+│   ├── ui/              # Reusable UI components
+│   ├── layout/          # Layout components
+│   └── charts/          # Data visualization
 ├── contexts/            # React contexts
 │   └── AuthContext.tsx
 ├── hooks/               # Custom React hooks
 ├── lib/                 # Utilities and configurations
 │   ├── api/             # API client and endpoints
+│   │   ├── client.ts    # Base API client
+│   │   ├── analytics.ts # Analytics API client
+│   │   └── task.ts      # Task API client
 │   ├── types/           # TypeScript type definitions
 │   └── utils/           # Helper functions
 └── providers/           # Context providers
@@ -435,6 +513,34 @@ For support and questions:
 - Create an issue in the GitHub repository
 - Check the documentation in each application's README
 - Review the API documentation for endpoint details
+
+## 📝 Recent Updates
+
+### Analytics Dashboard & Leaderboard Feature (Latest)
+**Date**: November 2025
+
+**What's New:**
+- ✅ **Complete Analytics Dashboard** with 5 visualization components
+- ✅ **Backend Implementation**: 5 new API endpoints with MongoDB aggregation
+- ✅ **Frontend Components**: 4 React components with TypeScript
+- ✅ **XP Progress Tracking**: Interactive line charts showing XP growth over time
+- ✅ **Activity Heatmap**: GitHub-style contribution graph for daily patterns
+- ✅ **Productivity Insights**: Best hours, best days, streaks, and completion stats
+- ✅ **Friend Leaderboard**: Competitive rankings with period selection (weekly/monthly/all-time)
+- ✅ **Task Analytics**: Completion stats by priority and status
+
+**Technical Details:**
+- 10 files modified/created (9 new, 1 modified)
+- ~700 lines of production code
+- Full TypeScript coverage with strict mode
+- Comprehensive documentation in memory-bank folder
+- All endpoints protected with JWT authentication
+- Input validation with express-validator
+
+**Files Added:**
+- Backend: `analyticsController.ts`, `analyticsRoutes.ts`
+- Frontend: `analytics.ts` (API client), 4 components, `analytics/page.tsx`
+- Documentation: Updated `architecture.md` and `progress.md`
 
 ## 🗺️ Roadmap
 
